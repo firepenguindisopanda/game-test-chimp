@@ -14,11 +14,25 @@ import {
   fetchPlayerScores,
   type ScoreRow,
 } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardScreenProps {
   playerName: string;
   onHome: () => void;
   latestScore?: { level: number; tiles: number };
+}
+
+type ModeFilter = "all" | "beginner" | "advanced" | "super_advanced";
+
+const modeLabels: Record<string, string> = {
+  beginner: "Beginner",
+  advanced: "Advanced",
+  super_advanced: "Super Adv",
+};
+
+function formatViewTime(viewTime: number | null): string {
+  if (viewTime === null) return "—";
+  return `${viewTime}s`;
 }
 
 export function LeaderboardScreen({
@@ -29,17 +43,19 @@ export function LeaderboardScreen({
   const [globalScores, setGlobalScores] = useState<ScoreRow[]>([]);
   const [personalScores, setPersonalScores] = useState<ScoreRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modeFilter, setModeFilter] = useState<ModeFilter>("all");
 
   const loadScores = useCallback(async () => {
     setLoading(true);
+    const modeParam = modeFilter === "all" ? undefined : modeFilter;
     const [global, personal] = await Promise.all([
-      fetchLeaderboard(),
+      fetchLeaderboard(50, modeParam),
       playerName ? fetchPlayerScores(playerName) : Promise.resolve([]),
     ]);
     setGlobalScores(global);
     setPersonalScores(personal);
     setLoading(false);
-  }, [playerName]);
+  }, [playerName, modeFilter]);
 
   useEffect(() => {
     loadScores();
@@ -55,7 +71,33 @@ export function LeaderboardScreen({
         </div>
       )}
 
-      <Tabs defaultValue="global" className="w-full max-w-[520px]">
+      {/* Mode filter tabs */}
+      <div className="flex gap-2 mb-4">
+        {(["all", "beginner", "advanced", "super_advanced"] as ModeFilter[]).map(
+          (mode) => (
+            <button
+              key={mode}
+              onClick={() => setModeFilter(mode)}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                modeFilter === mode
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/10 text-blue-200 hover:bg-white/20"
+              )}
+            >
+              {mode === "all"
+                ? "All"
+                : mode === "beginner"
+                  ? "Beginner"
+                  : mode === "advanced"
+                    ? "Advanced"
+                    : "Super Adv"}
+            </button>
+          )
+        )}
+      </div>
+
+      <Tabs defaultValue="global" className="w-full max-w-[640px]">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="global">Global</TabsTrigger>
           <TabsTrigger value="personal">My Scores</TabsTrigger>
@@ -77,6 +119,8 @@ export function LeaderboardScreen({
                     <TableHead className="text-blue-300">Name</TableHead>
                     <TableHead className="text-blue-300 text-right">Level</TableHead>
                     <TableHead className="text-blue-300 text-right">Tiles</TableHead>
+                    <TableHead className="text-blue-300 text-right">Mode</TableHead>
+                    <TableHead className="text-blue-300 text-right">View</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -103,6 +147,12 @@ export function LeaderboardScreen({
                       </TableCell>
                       <TableCell className="text-white text-right">
                         {score.tiles_count}
+                      </TableCell>
+                      <TableCell className="text-white text-right text-xs">
+                        {modeLabels[score.mode] ?? score.mode}
+                      </TableCell>
+                      <TableCell className="text-white/60 text-right text-xs">
+                        {formatViewTime(score.view_time)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -131,6 +181,8 @@ export function LeaderboardScreen({
                     <TableHead className="text-blue-300">Date</TableHead>
                     <TableHead className="text-blue-300 text-right">Level</TableHead>
                     <TableHead className="text-blue-300 text-right">Tiles</TableHead>
+                    <TableHead className="text-blue-300 text-right">Mode</TableHead>
+                    <TableHead className="text-blue-300 text-right">View</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -144,6 +196,12 @@ export function LeaderboardScreen({
                       </TableCell>
                       <TableCell className="text-white text-right">
                         {score.tiles_count}
+                      </TableCell>
+                      <TableCell className="text-white text-right text-xs">
+                        {modeLabels[score.mode] ?? score.mode}
+                      </TableCell>
+                      <TableCell className="text-white/60 text-right text-xs">
+                        {formatViewTime(score.view_time)}
                       </TableCell>
                     </TableRow>
                   ))}
