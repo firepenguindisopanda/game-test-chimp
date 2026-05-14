@@ -42,7 +42,7 @@ npm run dev
 
 ---
 
-### ✨ Utility: `cn()`
+### Utility: `cn()`
 
 Located in `src/utils.ts`
 
