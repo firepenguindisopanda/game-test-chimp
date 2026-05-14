@@ -16,19 +16,25 @@ export interface ScoreRow {
   player_name: string;
   best_level: number;
   tiles_count: number;
+  mode: string;
+  view_time: number | null;
   played_at: string;
 }
 
 export async function saveScore(
   playerName: string,
   bestLevel: number,
-  tilesCount: number
+  tilesCount: number,
+  mode: string = "beginner",
+  viewTime: number | null = null
 ): Promise<void> {
   try {
     const { error } = await supabase.from("scores").insert({
       player_name: playerName,
       best_level: bestLevel,
       tiles_count: tilesCount,
+      mode,
+      view_time: viewTime,
     });
     if (error) throw error;
   } catch (error) {
@@ -37,16 +43,22 @@ export async function saveScore(
 }
 
 export async function fetchLeaderboard(
-  limit = 50
+  limit = 50,
+  mode?: string
 ): Promise<ScoreRow[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("scores")
       .select("*")
       .order("best_level", { ascending: false })
       .order("tiles_count", { ascending: false })
       .limit(limit);
 
+    if (mode) {
+      query = query.eq("mode", mode);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data ?? [];
   } catch (error) {
