@@ -1,4 +1,4 @@
-import type { GameState, GameAction, TileData } from "./types";
+import type { GameState, GameAction, TileData, GameMode } from "./types";
 
 const GRID_COLS = 6;
 const GRID_ROWS = 6;
@@ -15,31 +15,54 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildGrid(tileCount: number): {
+function buildGridSuperAdvanced(tileCount: number): { numbers: number[] } {
+  const numbers: number[] = [];
+  let current = Math.floor(Math.random() * 3) + 1; // start: 1, 2, or 3
+  numbers.push(current);
+  for (let i = 1; i < tileCount; i++) {
+    const gap = Math.floor(Math.random() * 6) + 1; // gap: 1–6
+    current += gap;
+    numbers.push(current);
+  }
+  return { numbers };
+}
+
+function buildGrid(tileCount: number, mode: GameMode): {
   grid: TileData[];
   sequence: number[];
 } {
   const allCells = Array.from({ length: TOTAL_CELLS }, (_, i) => i);
   const chosen = shuffle(allCells).slice(0, tileCount);
-  const sequence = shuffle([...chosen]);
+
+  let labels: number[];
+  if (mode === "super_advanced") {
+    const { numbers } = buildGridSuperAdvanced(tileCount);
+    labels = numbers;
+  } else {
+    labels = Array.from({ length: tileCount }, (_, i) => i + 1);
+  }
+
+  const labelOrder = [...labels].sort((a, b) => a - b);
 
   const grid: TileData[] = Array.from({ length: TOTAL_CELLS }, (_, i) => {
     const numIndex = chosen.indexOf(i);
     return {
       index: i,
-      number: numIndex !== -1 ? numIndex + 1 : null,
+      number: numIndex !== -1 ? labels[numIndex] : null,
       state: numIndex !== -1 ? "visible" : "empty",
     };
   });
 
-  return { grid, sequence };
+  return { grid, sequence: labelOrder };
 }
 
 export function createInitialState(): GameState {
-  const { grid, sequence } = buildGrid(START_TILES);
+  const { grid, sequence } = buildGrid(START_TILES, "beginner");
   return {
     screen: "home",
     playerName: "",
+    mode: "beginner",
+    viewTime: 3,
     level: 1,
     tiles: START_TILES,
     lives: MAX_LIVES,
@@ -56,13 +79,25 @@ export function createInitialState(): GameState {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "START_GAME": {
-      const { grid, sequence } = buildGrid(START_TILES);
+      const { grid, sequence } = buildGrid(START_TILES, action.mode);
       return {
         ...createInitialState(),
         screen: "playing",
         playerName: action.playerName,
+        mode: action.mode,
+        viewTime: action.viewTime,
         grid,
         sequence,
+      };
+    }
+
+    case "HIDE_TILES": {
+      return {
+        ...state,
+        revealed: false,
+        grid: state.grid.map((t) =>
+          t.state === "visible" ? { ...t, state: "hidden" as const } : t
+        ),
       };
     }
 
@@ -125,7 +160,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "NEXT_ROUND": {
       const newLevel = state.level + 1;
       const newTiles = state.tiles + 1;
-      const { grid, sequence } = buildGrid(newTiles);
+      const { grid, sequence } = buildGrid(newTiles, state.mode);
       return {
         ...state,
         level: newLevel,
@@ -144,7 +179,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       // If game is already over, don't rebuild (prevents timer interference)
       if (state.lives <= 0) return state;
       // Generate a completely new random pattern at the same difficulty
-      const { grid, sequence } = buildGrid(state.tiles);
+      const { grid, sequence } = buildGrid(state.tiles, state.mode);
       return {
         ...state,
         grid,
