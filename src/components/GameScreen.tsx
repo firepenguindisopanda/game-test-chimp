@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tile } from "@/components/Tile";
+import { TimerRing } from "@/components/TimerRing";
 import type { GameState } from "@/lib/types";
 
 interface GameScreenProps {
   state: GameState;
   onTileClick: (index: number) => void;
+  onHideTiles: () => void;
   onNextRound: () => void;
   onLifeLost: () => void;
   onGameOver: () => void;
@@ -15,12 +17,14 @@ interface GameScreenProps {
 export function GameScreen({
   state,
   onTileClick,
+  onHideTiles,
   onNextRound,
   onLifeLost,
   onGameOver,
   onQuit,
 }: GameScreenProps) {
   const prevLivesRef = useRef(state.lives);
+  const isTimedMode = state.mode === "advanced" || state.mode === "super_advanced";
 
   // Handle wrong guess → new pattern after 400ms
   useEffect(() => {
@@ -56,11 +60,18 @@ export function GameScreen({
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 sm:p-8">
       {/* Stats Bar */}
-      <div className="flex gap-3 sm:gap-4 mb-6 flex-wrap justify-center">
+      <div className="flex gap-3 sm:gap-4 mb-6 flex-wrap justify-center items-center">
         <StatBox label="Level" value={state.level} />
         <StatBox label="Tiles" value={state.tiles} />
         <StatBox label="Best" value={state.bestLevel} />
         <StatBox label="Lives" value={"❤️".repeat(state.lives)} />
+        {isTimedMode && state.revealed && (
+          <TimerRing
+            key={`${state.level}-${state.lives}-${state.tiles}`}
+            duration={state.viewTime}
+            onTimeUp={onHideTiles}
+          />
+        )}
       </div>
 
       {/* Message */}
@@ -96,6 +107,15 @@ export function GameScreen({
             />
           ))}
         </div>
+      </div>
+
+      {/* Mode indicator */}
+      <div className="mt-3 text-xs text-blue-300/60 uppercase tracking-widest">
+        {state.mode === "beginner"
+          ? "Beginner"
+          : state.mode === "advanced"
+            ? `Advanced · ${state.viewTime}s`
+            : `Super Advanced · ${state.viewTime}s`}
       </div>
 
       {/* Quit button */}
