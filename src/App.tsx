@@ -4,6 +4,7 @@ import { saveScore } from "@/lib/supabase";
 import { HomeScreen } from "@/components/HomeScreen";
 import { GameScreen } from "@/components/GameScreen";
 import { LeaderboardScreen } from "@/components/LeaderboardScreen";
+import type { GameMode, ViewTime } from "@/lib/types";
 
 export default function App() {
   const [state, dispatch] = useReducer(
@@ -17,12 +18,19 @@ export default function App() {
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const handleStart = useCallback((playerName: string) => {
-    dispatch({ type: "START_GAME", playerName });
-  }, []);
+  const handleStart = useCallback(
+    (playerName: string, mode: GameMode, viewTime: ViewTime) => {
+      dispatch({ type: "START_GAME", playerName, mode, viewTime });
+    },
+    []
+  );
 
   const handleTileClick = useCallback((index: number) => {
     dispatch({ type: "CLICK_TILE", index });
+  }, []);
+
+  const handleHideTiles = useCallback(() => {
+    dispatch({ type: "HIDE_TILES" });
   }, []);
 
   const handleNextRound = useCallback(() => {
@@ -33,13 +41,11 @@ export default function App() {
     dispatch({ type: "LIFE_LOST" });
   }, []);
 
-  // Stable reference — always reads latest state via ref
   const handleGameOver = useCallback(() => {
     const s = stateRef.current;
     latestScoreRef.current = { level: s.bestLevel, tiles: s.tiles };
 
-    // Fire-and-forget save to Supabase
-    saveScore(s.playerName, s.bestLevel, s.tiles);
+    saveScore(s.playerName, s.bestLevel, s.tiles, s.mode, s.viewTime);
 
     dispatch({ type: "GAME_OVER" });
   }, []);
@@ -63,6 +69,7 @@ export default function App() {
       <GameScreen
         state={state}
         onTileClick={handleTileClick}
+        onHideTiles={handleHideTiles}
         onNextRound={handleNextRound}
         onLifeLost={handleLifeLost}
         onGameOver={handleGameOver}
