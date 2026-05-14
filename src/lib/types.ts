@@ -1,4 +1,6 @@
 export type Screen = "home" | "playing" | "leaderboard";
+export type GameMode = "beginner" | "advanced" | "super_advanced";
+export type ViewTime = 3 | 5 | 7;
 
 export type TileState = "hidden" | "visible" | "correct" | "wrong" | "empty";
 
@@ -11,6 +13,8 @@ export interface TileData {
 export interface GameState {
   screen: Screen;
   playerName: string;
+  mode: GameMode;
+  viewTime: ViewTime;
   level: number;
   tiles: number;
   lives: number;
@@ -24,8 +28,9 @@ export interface GameState {
 }
 
 export type GameAction =
-  | { type: "START_GAME"; playerName: string }
+  | { type: "START_GAME"; playerName: string; mode: GameMode; viewTime: ViewTime }
   | { type: "CLICK_TILE"; index: number }
+  | { type: "HIDE_TILES" }
   | { type: "NEXT_ROUND" }
   | { type: "LIFE_LOST" }
   | { type: "GAME_OVER" }
