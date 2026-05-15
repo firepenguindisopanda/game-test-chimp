@@ -31,6 +31,7 @@ export function GameScreen({
   // Handle wrong guess → new pattern after 400ms
   useEffect(() => {
     if (state.lives < prevLivesRef.current) {
+      interactionsRef.current.onWrongGuess();
       const timer = setTimeout(() => {
         onLifeLost();
       }, 400);
@@ -42,6 +43,7 @@ export function GameScreen({
   // Handle level cleared → next round after 900ms
   useEffect(() => {
     if (state.messageType === "success") {
+      interactionsRef.current.onLevelClear();
       const timer = setTimeout(() => {
         onNextRound();
       }, 900);
@@ -52,6 +54,7 @@ export function GameScreen({
   // Handle game over (lives = 0) → navigate after 1800ms
   useEffect(() => {
     if (state.lives <= 0) {
+      interactionsRef.current.onGameOver();
       const timer = setTimeout(() => {
         onGameOver();
       }, 1800);
