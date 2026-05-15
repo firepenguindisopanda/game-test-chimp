@@ -51,14 +51,21 @@ export function GameScreen({
     }
   }, [state.messageType, onNextRound]);
 
-  // Handle game over (lives = 0) → navigate after 1800ms
+  // Handle game over (lives = 0) → play sound after 2s, navigate after 4s
   useEffect(() => {
     if (state.lives <= 0) {
-      interactionsRef.current.onGameOver();
-      const timer = setTimeout(() => {
+      const soundTimer = setTimeout(() => {
+        interactionsRef.current.onGameOver();
+      }, 2000);
+
+      const navTimer = setTimeout(() => {
         onGameOver();
-      }, 1800);
-      return () => clearTimeout(timer);
+      }, 4000);
+
+      return () => {
+        clearTimeout(soundTimer);
+        clearTimeout(navTimer);
+      };
     }
   }, [state.lives, onGameOver]);
 
