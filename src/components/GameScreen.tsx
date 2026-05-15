@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tile } from "@/components/Tile";
 import { TimerRing } from "@/components/TimerRing";
 import type { GameState } from "@/lib/types";
+import { InteractionManager } from "@/lib/audio";
 
 interface GameScreenProps {
   state: GameState;
@@ -25,6 +26,7 @@ export function GameScreen({
 }: GameScreenProps) {
   const prevLivesRef = useRef(state.lives);
   const isTimedMode = state.mode === "advanced" || state.mode === "super_advanced";
+  const interactionsRef = useRef(new InteractionManager());
 
   // Handle wrong guess → new pattern after 400ms
   useEffect(() => {
@@ -56,6 +58,14 @@ export function GameScreen({
       return () => clearTimeout(timer);
     }
   }, [state.lives, onGameOver]);
+
+  const handleTileClick = useCallback(
+    (index: number) => {
+      interactionsRef.current.onTileClick();
+      onTileClick(index);
+    },
+    [onTileClick]
+  );
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 sm:p-8">
@@ -103,7 +113,7 @@ export function GameScreen({
               key={tile.index}
               number={tile.number}
               state={tile.state}
-              onClick={() => onTileClick(tile.index)}
+              onClick={() => handleTileClick(tile.index)}
             />
           ))}
         </div>
