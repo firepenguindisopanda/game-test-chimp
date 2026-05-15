@@ -22,12 +22,30 @@ export class InteractionManager {
     this.audio = audio;
     this.soundMap = {
       tileClick: "ogre_selected3",
+      wrongGuess: "ogre_selected2",
+      levelClear: "ogre_acknowledge3",
+      gameOver: "horde_ship_acknowledge3",
     };
   }
 
   /** Play the sound associated with clicking a game tile. */
   onTileClick(): void {
     this.audio.play(this.soundMap.tileClick);
+  }
+
+  /** Play the sound when the player guesses the wrong tile. */
+  onWrongGuess(): void {
+    this.audio.play(this.soundMap.wrongGuess);
+  }
+
+  /** Play the sound when a level is cleared successfully. */
+  onLevelClear(): void {
+    this.audio.play(this.soundMap.levelClear);
+  }
+
+  /** Play the sound when the game ends (all lives lost). */
+  onGameOver(): void {
+    this.audio.play(this.soundMap.gameOver);
   }
 
   /**
