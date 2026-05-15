@@ -9,6 +9,9 @@
  */
 const audioFiles: Record<string, string> = {
   ogre_selected3: "/audio/ogre_selected3.wav",
+  ogre_selected2: "/audio/ogre_selected2.wav",
+  ogre_acknowledge3: "/audio/ogre_acknowledge3.wav",
+  horde_ship_acknowledge3: "/audio/horde_ship_acknowledge3.wav",
 } as const;
 
 /**
